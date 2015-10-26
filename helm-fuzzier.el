@@ -5,6 +5,8 @@
 ;; Author: Ephram Perdition
 
 ;; Package-Requires: ((emacs "24.3"))
+;; Package-Version: 0.1.0
+
 ;; Keywords: convenience helm fuzzy
 ;; Homepage: http://github.com/EphramPerdition/helm-fuzzier
 
@@ -99,6 +101,8 @@
 ;; source for which fuzzy-matching is enabled, so be sure to turn it on
 ;; using helm's *-fuzzy-match boolean custom options.
 
+;;; Code:
+
 (require 'cl-lib)
 (require 'helm) ; we redefine some helm functions, ensure it is loaded first
 
@@ -120,7 +124,7 @@ The characters are interpolated as-is into a regex inside
 a charcater class \"[%s]\" so be careful about quoting.
 
 The default value should work for the conventions common
-in emacs symbols (i.e \"foo/bar-the-baz\") and in filenames
+in Emacs symbols (i.e \"foo/bar-the-baz\") and in filenames
 (i.e. \"the file name\")"
 :group 'helm-fuzzier
 :type  'string)
@@ -180,16 +184,17 @@ Example: (explode \"abc\" 2) =>
 (defun helm-fuzzier--mapconcat-initials-pattern (pattern seperators &optional max-group-length)
   "Transform string PATTERN into a regexp for fuzzy matching as initials.
 
-With SEPERATORS as a string of regex-quoted word-boundary characters (\"- /\"),
-partition pattern into groups in various ways and construct a regex pattern
-that tries to match any of these variations against the word prefixes in a candidate.
+With SEPERATORS as a string of regex-quoted word-boundary characters
+(\"- /\"), partition pattern into groups in various ways and construct
+a regex pattern that tries to match any of these variations against
+the word prefixes in a candidate.
 
-The number of variations is controlled by the MAX_GROUP-LENGTH argument:
+The regex generation variations is controlled by the MAX_GROUP-LENGTH argument:
 
-With MAX-GROUP-LENGTH=1 the pattern \"abc\" will be turned into a regex that matches
+With MAX-GROUP-LENGTH=1 the pattern generated for \"abc\" will matche
 \"a...-b...-c\"
 
-With MAX-GROUP-LENGTH=2 the pattern \"abc\" will be turned into a regex that matches
+With MAX-GROUP-LENGTH=2 the pattern generated for \"abc\" will matche
 \"a...-b...-c...\" or \"ab...-c...\" or \"a...-bc....\"
 
 etc'."
@@ -200,7 +205,10 @@ etc'."
              "\\|"))
 
 (defun helm--make-initials-matcher (pattern &optional seperators max-group-length )
-  "Constructs a closure matching function for pattern"
+  "Constructs a matching function for PATTERN.
+
+See 'helm-fuzzier--mapconcat-initials-pattern' docstring for information
+about SEPERATORS and MAX-GROUP-LENGTH"
   (let* ((initials-pat (helm-fuzzier--mapconcat-initials-pattern
                         pattern
                         (or seperators helm-fuzzier-word-boundaries)
@@ -242,7 +250,7 @@ etc'."
       (substring s 0 (1- len)))))
 
 (defun helm-fuzzier--new-nonempty-query-p (source query)
-  "Check if query is not-empty and not covered by current cached contents"
+  "Check if query is not-empty and not covered by current cached contents."
   (and  (> (length query) 0)
         (not (string-prefix-p
               (or (gethash  (concat (assoc-default 'name source) "-query")
@@ -265,7 +273,7 @@ etc'."
     (helm-get-candidates source)))
 
 (defun helm-fuzzier--matchfn-stub (&rest args)
-  (user-error "I should not have been called."))
+  (user-error "I should not have been called"))
 
 (defun helm-fuzzier--get-preferred-matches (cands matchfns match-part-fn limit source)
   ;; when a new query begins we need to reset the caches.
@@ -346,7 +354,7 @@ etc'."
       (let ((matchfns (append (list #'helm-fuzzier--matchfn-stub)
                               matchfns)))
         ;; override matchfns with a list containing our canary
-        (add-to-list 'source (cons 'match matchfns))))
+        (push (cons 'match matchfns) source)))
 
     (funcall orig-fun source)))
 
