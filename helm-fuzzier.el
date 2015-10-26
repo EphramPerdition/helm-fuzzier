@@ -5,7 +5,6 @@
 ;; Author: Ephram Perdition
 
 ;; Package-Requires: ((emacs "24.3") (helm "1.7.0"))
-;; Package-Version: 0.1.0
 
 ;; Keywords: convenience helm fuzzy
 ;; Homepage: http://github.com/EphramPerdition/helm-fuzzier
