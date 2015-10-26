@@ -344,11 +344,15 @@ about SEPERATORS and MAX-GROUP-LENGTH"
           (setq helm-fuzzier-old-helm-match-fn (symbol-function #'helm-match-from-candidates)))
         (setf (symbol-function 'helm-match-from-candidates) #'helm-fuzzier--match-from-candidates)
         (advice-add #'helm-compute-matches :around #'helm-fuzzier--advice-helm-compute-matches)
-        (message "helm-fuzzier-mode enabled."))
+
+        (when (called-interactively-p 'any)
+          (message "helm-fuzzier-mode enabled.")))
 
     (advice-remove #'helm-compute-matches #'helm-fuzzier--advice-helm-compute-matches)
     (setf (symbol-function 'helm-match-from-candidates) helm-fuzzier-old-helm-match-fn)
-    (message "helm-fuzzier-mode disabled.")))
+
+    (when (called-interactively-p 'any)
+      (message "helm-fuzzier-mode disabled."))))
 
 (provide 'helm-fuzzier)
 
