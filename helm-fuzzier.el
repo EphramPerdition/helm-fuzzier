@@ -147,10 +147,10 @@ will return a pattern that matches \"a123/bc45-d\"
 SEPERATORS is a string contains one or more word seperators. Any characters
 which are not regex-safe should be quoted."
   (concat "\\("
-          (format "^%s" (car groups) seperators (car groups))
+          (format "^%s" (car groups))
           (mapconcat (lambda (c)
                        (if (and (string= c "$")
-                                (string-match "$\\'" pattern))
+                                (string-match "$\\'" (apply 'concat groups)))
                            c (format "\\(.*[%s]%s\\)" seperators c)))
                      (cdr groups) "")
           "\\)"))
@@ -246,10 +246,10 @@ about SEPERATORS and MAX-GROUP-LENGTH"
        source)
     (helm-get-candidates source)))
 
-(defun helm-fuzzier--matchfn-stub (&rest args)
+(defun helm-fuzzier--matchfn-stub (&rest _)
   (user-error "I should not have been called"))
 
-(defun helm-fuzzier--get-preferred-matches (cands matchfns match-part-fn limit source)
+(defun helm-fuzzier--get-preferred-matches (cands _ match-part-fn limit source)
   ;; when a new query begins we need to reset the caches.
   (when (helm-fuzzier--new-nonempty-query-p source helm-pattern)
     (clrhash helm-fuzzier-preferred-matches-cache)
@@ -311,8 +311,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
     (append preferred-matches matches)))
 
 (defun helm-fuzzier--advice-helm-compute-matches (orig-fun source)
-  (let* ((source-name (assoc-default 'name source))
-         (matchfns (helm-match-functions source))
+  (let* ((matchfns (helm-match-functions source))
          (matchfns (if (listp matchfns)
                        matchfns
                      (list matchfns)))
