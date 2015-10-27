@@ -108,8 +108,8 @@ logic.
 If you use one but not the other you'll get "better" results but
 you'll only fix half the problem. Of course, because both `flx` and
 `helm-fuzzier` rely on heuristics to define a "good" candidate, you
-might want to replace either or with another set of heuristics. Currently
-though, there's not much choice out there.
+might want to replace one or the other with some other set of heuristics
+You prefer. Currently, though, there's not much choice out there.
 
 To summarise, `helm-flx` and `helm-fuzzier` complement one another,
 neither strictly requires the other, neither is a substitute for the
