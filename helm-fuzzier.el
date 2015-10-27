@@ -3,11 +3,14 @@
 ;; Copyright (C) 2015 Ephram Perdition
 
 ;; Author: Ephram Perdition
+;; Created: 25 Oct 2015
 
 ;; Package-Requires: ((emacs "24.3") (helm "1.7.0"))
 
 ;; Keywords: convenience helm fuzzy
 ;; Homepage: http://github.com/EphramPerdition/helm-fuzzier
+
+;; This file is not part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
