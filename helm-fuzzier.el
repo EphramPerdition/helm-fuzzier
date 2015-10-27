@@ -105,6 +105,10 @@
 (require 'cl-lib)
 (require 'helm) ; we redefine some helm functions, ensure it is loaded first
 
+(defgroup helm-fuzzier nil
+  "Better Fuzzy Matching For Helm."
+  :group 'helm)
+
 (defcustom helm-fuzzier-preferred-max-group-length 4
   "Knob controlling regex generation for fuzzier matching.
 
