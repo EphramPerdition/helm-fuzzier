@@ -56,6 +56,62 @@ Try toggling `helm-fuzzier-mode` on and off and see the difference.
 
 ### Notes
 
-Please report any bugs/issues you encounter.
+Please report any bugs/issues.
 
 See source code for more detailed information on the implementation.
+
+### Fuzzy matching in Helm
+
+#### tl;dr:
+
+- Helm provides "fuzzy matching" out of the box.
+- But what many users actually want is "flex matching".
+- `helm-fuzzier` and `helm-flx` each improve Helm's matching in distinct ways.
+- Together, they finally provide the sort of "flex matching" you want, in Helm,
+for any source that has fuzzy matching enabled.
+
+#### The Whole Story
+
+Fuzzy matching in Helm consists of two distinct parts: 'matching' and
+'scoring'. The former selects candidates that match a query and the
+latter sorts them from best to worse so that the best results appear
+first in the result set presented to the user.
+
+Unfortunately, (As of Oct 2015) the way both are implemented in
+vanilla Helm does not match the behavior many people have come to expect
+from other editors. A distinction is sometimes made between
+*fuzzy-matching* (which vanilla Helm provides) and *flex matching*
+which, as far as I know, originated from (or at least was popularized
+by) a Mac Application called
+[Quicksilver](https://en.wikipedia.org/wiki/Quicksilver_%28software%29),
+variants of the Quicksilver concept are now quite popular and part
+of many software packages, from [smex](https://github.com/nonsequitur/smex)
+to "Sublime Text". You can search for "quicksilver algorithm" to see how
+far back it goes.
+
+@lewang wrote up the wonderful [flx](https://github.com/lewang/flx)
+package in 2013 which finally provided a quicksilver-like *scoring* of matches,
+but until recently (Oct. 2015) `flx` only supported `ido`, not Helm.
+@PythonNut packaged a snippet from his `.emacs` as `helm-flx` to remedy
+and so the scoring part of Helm now works very well.
+
+Improving Helm's *matching*, the other half of getting good results, is
+done by this package: `helm-fuzzier`. Although good scoring ensures
+you see the best results first, it can only boost the results it gets
+to rank. By default, Helm will find the first 100 "matches" and stop
+scanning, so very often `helm-flx` doesn't even get to see the best
+matches in order to see them. `helm-fuzzier` addresses this by performing
+an initial scan for "Preferred Matches" over *all* candidates, before
+handing control back to helm to find further matches with its default
+logic.
+
+If you use one but not the other you'll get "better" results but
+you'll only fix half the problem. Of course, because both `flx` and
+`helm-fuzzier` rely on heuristics to define a "good" candidate, you
+might want to replace either or with another set of heuristics. Currently
+though, there's not much choice out there.
+
+To summarise, `helm-flx` and `helm-fuzzier` complement one another,
+neither strictly requires the other, neither is a substitute for the
+other and, currently, using them both will give you the best
+experience.  It's about bloody time, Emacs.
