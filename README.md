@@ -96,11 +96,11 @@ but until recently (Oct. 2015) `flx` only supported `ido`, not Helm.
 this and so the scoring part of Helm now works very well.
 
 Improving Helm's *matching*, the other half of getting good results, is
-done by this package: `helm-fuzzier`. Although good scoring ensures
+what `helm-fuzzier` does. Although good scoring ensures
 you see the best results first, it can only boost the results it gets
 to rank. By default, Helm will find the first 100 "matches" and stop
 scanning, so very often `helm-flx` doesn't even get to see the best
-matches in order to see them. `helm-fuzzier` addresses this by performing
+matches in order to score them. `helm-fuzzier` addresses this by performing
 an initial scan for "Preferred Matches" over *all* candidates, before
 handing control back to helm to find further matches with its default
 logic.
