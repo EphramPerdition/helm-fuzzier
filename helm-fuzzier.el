@@ -366,6 +366,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
 
     (funcall orig-fun source)))
 
+;;;###autoload
 (define-minor-mode helm-fuzzier-mode
   "helm-flx minor mode"
   :init-value nil
