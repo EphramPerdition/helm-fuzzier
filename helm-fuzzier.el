@@ -105,6 +105,7 @@
 (require 'cl-lib)
 (require 'helm) ; we redefine some helm functions, ensure it is loaded first
 
+;;; Customization
 (defgroup helm-fuzzier nil
   "Better Fuzzy Matching For Helm."
   :group 'helm)
@@ -119,7 +120,6 @@ For a query of \"abc\":
   :group 'helm-fuzzier
   :type  'integer)
 
-
 (defcustom helm-fuzzier-word-boundaries "- /:|"
   "List of characters that indicate a word boundary.
 
@@ -132,9 +132,7 @@ in Emacs symbols (i.e \"foo/bar-the-baz\") and in filenames
 :group 'helm-fuzzier
 :type  'string)
 
-
-
-;; internal variables
+;;; internal variables
 (defvar helm-fuzzier-preferred-matches-cache (make-hash-table :test 'equal :size 8192)
   "Caches the preferred matches within a single helm invocation.")
 (defvar helm-fuzzier-preferred-candidates-cache (make-hash-table :test 'equal :size 1024)
@@ -244,7 +242,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
            #'buffer-substring-no-properties)
        (or (assoc-default 'search source)
            '(helm-candidates-in-buffer-search-default-fn))
-       50000
+       50000 ;; hard limit on number of candidates scanned
        (helm-attr 'match-part)
        source)
     (helm-get-candidates source)))
@@ -278,7 +276,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
                                                                             match-part-fn limit source)))
          (preferred-count (length preferred-matches)))
 
-    ;; iff helm-fuzzier-preferred-max-group-length=1) and the number of
+    ;; iff helm-fuzzier-preferred-max-group-length=1 and the number of
     ;; preferred matches found is below LIMIT, we can be certain that:
     ;;
     ;; 1. We've found all possible matches.
@@ -299,10 +297,11 @@ about SEPERATORS and MAX-GROUP-LENGTH"
       (puthash (concat source-name helm-pattern) preferred-matches helm-fuzzier-preferred-matches-cache))
     preferred-matches))
 
-; This function copied from Helm and slightly modified.
-; We need to disable the cache clear to ensure dedupe works across
-; multiple calls to this. hash clearing is handled by ther caller
-; helm-fuzzier--match-from-candidates instead.
+;; This function copied from Helm's 'helm-match-from-candidate' and
+;; slightly modified.  We need to disable the cache clear to ensure
+;; dedupe works across multiple calls to this function.
+;;
+;; Hash clearing is handled by the caller 'helm-fuzzier--match-from-candidates' instead.
 (defun helm-fuzzier-orig-helm-match-from-candidates (cands matchfns match-part-fn limit source)
   (let (matches)
     (condition-case-unless-debug err
@@ -331,8 +330,13 @@ about SEPERATORS and MAX-GROUP-LENGTH"
 
 
 (defun helm-fuzzier--match-from-candidates (cands matchfns match-part-fn limit source)
+  "Substitute function for 'helm-match-from-candidates'.
 
-  (clrhash helm-match-hash)
+First perform the \"preferred matches\" pass and then call the default helm
+logic to fill the remaining quota with matches using its algo. Returns
+the result of both concatenated into one list."
+
+  (clrhash helm-match-hash) ; Clear hashtable used for deduping results across multiple matchfns
 
   (let* ((with-preferred (member #'helm-fuzzier--matchfn-stub matchfns ))
          (matchfns (cl-remove #'helm-fuzzier--matchfn-stub matchfns))
@@ -352,11 +356,11 @@ about SEPERATORS and MAX-GROUP-LENGTH"
                      (list matchfns)))
          (source-is-fuzzy (assoc 'fuzzy-match source)))
 
-    ;; For every source which has ;; fuzzy-matching enabled We insert
+    ;; For every source which has fuzzy-matching enabled we insert
     ;; a canary matchfn.  This also serves to disable an inconvenient
     ;; optimization in helm's 'helm-compute-matches' where if matchfns
-    ;; is simply '(identity), the entire magic logic is skipped, and
-    ;; we wouldn't get a chance to influence the results.
+    ;; is simply '(identity) the entire magic logic is skipped which
+    ;; means we wouldn't get a chance to influence the results.
 
     (when source-is-fuzzy
       (let ((matchfns (append (list #'helm-fuzzier--matchfn-stub)
