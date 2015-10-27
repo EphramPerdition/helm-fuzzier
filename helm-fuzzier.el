@@ -320,10 +320,10 @@ in 'helm-match-from-candidates' ."
     preferred-matches))
 
 ;; This function copied from Helm's 'helm-match-from-candidate' and
-;; slightly modified.  We need to disable the cache clear to ensure
+;; slightly modified.  We need to disable the clrhash to ensure
 ;; dedupe works across multiple calls to this function.
 ;;
-;; Hash clearing is handled by the caller 'helm-fuzzier--match-from-candidates' instead.
+;; clrhash is invoked by the caller 'helm-fuzzier--match-from-candidates' instead.
 (defun helm-fuzzier-orig-helm-match-from-candidates (cands matchfns match-part-fn limit source)
   (let (matches)
     (condition-case-unless-debug err
