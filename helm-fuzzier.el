@@ -269,9 +269,9 @@ about SEPERATORS and MAX-GROUP-LENGTH"
                                    (> (length helm-pattern) 1)
                                    (< (length helm-pattern) 6)
                                    (assoc 'fuzzy-match source))
-                              (funcall helm-fuzzier-old-helm-match-fn all-candidates
-                                       (list prelim-matcher)
-                                       match-part-fn limit source)))
+                              (helm-fuzzier-orig-helm-match-from-candidates all-candidates
+                                                                            (list prelim-matcher)
+                                                                            match-part-fn limit source)))
          (preferred-count (length preferred-matches)))
 
     ;; iff helm-fuzzier-preferred-max-group-length=1) and the number of
@@ -295,6 +295,37 @@ about SEPERATORS and MAX-GROUP-LENGTH"
       (puthash (concat source-name helm-pattern) preferred-matches helm-fuzzier-preferred-matches-cache))
     preferred-matches))
 
+; This function copied from Helm and slightly modified.
+; We need to disable the cache clear to ensure dedupe works across
+; multiple calls to this. hash clearing is handled by ther caller
+; helm-fuzzier--match-from-candidates instead.
+(defun helm-fuzzier-orig-helm-match-from-candidates (cands matchfns match-part-fn limit source)
+  (let (matches)
+    (condition-case-unless-debug err
+        (let ((item-count 0)
+              (case-fold-search (helm-set-case-fold-search)))
+          ;; (clrhash helm-match-hash) ; DISABLED
+          (cl-dolist (match matchfns)
+            (when (< item-count limit)
+              (let (newmatches)
+                (cl-dolist (candidate cands)
+                  (unless (gethash candidate helm-match-hash)
+                    (let ((target (helm-candidate-get-display candidate)))
+                      (when (funcall match
+                                     (if match-part-fn
+                                         (funcall match-part-fn target) target))
+                        (helm--accumulate-candidates
+                         candidate newmatches
+                         helm-match-hash item-count limit source)))))
+                ;; filter-one-by-one may return nil candidates, so delq them if some.
+                (setq matches (nconc matches (nreverse (delq nil newmatches))))))))
+      (error (unless (eq (car err) 'invalid-regexp) ; Always ignore regexps errors.
+               (helm-log-error "helm-match-from-candidates in source `%s': %s %s"
+                               (assoc-default 'name source) (car err) (cdr err)))
+             (setq matches nil)))
+    matches))
+
+
 (defun helm-fuzzier--match-from-candidates (cands matchfns match-part-fn limit source)
 
   (clrhash helm-match-hash)
@@ -304,9 +335,10 @@ about SEPERATORS and MAX-GROUP-LENGTH"
          (preferred-matches (when with-preferred
                               (helm-fuzzier--get-preferred-matches cands matchfns match-part-fn limit source)))
          (remaining-count (max 0 (- limit (length preferred-matches))))
-         (matches (funcall helm-fuzzier-old-helm-match-fn cands
-                           matchfns
-                           match-part-fn remaining-count source)))
+         (matches (helm-fuzzier-orig-helm-match-from-candidates
+                   cands
+                   matchfns
+                   match-part-fn remaining-count source)))
     (append preferred-matches matches)))
 
 (defun helm-fuzzier--advice-helm-compute-matches (orig-fun source)
