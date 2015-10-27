@@ -123,7 +123,7 @@ For a query of \"abc\":
   :group 'helm-fuzzier
   :type  'integer)
 
-(defcustom helm-fuzzier-word-boundaries "- /:|"
+(defcustom helm-fuzzier-word-boundaries "- /:|_"
   "List of characters that indicate a word boundary.
 
 The characters are interpolated as-is into a regex inside
