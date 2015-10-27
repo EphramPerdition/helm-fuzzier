@@ -109,7 +109,11 @@ If you use one but not the other you'll get "better" results but
 you'll only fix half the problem. Of course, because both `flx` and
 `helm-fuzzier` rely on heuristics to define a "good" candidate, you
 might want to replace one or the other with some other set of heuristics
-You prefer. Currently, though, there's not much choice out there.
+You prefer. Currently, there's not much choice out there but you could
+probably adapt the code in [fuzzy-el](https://github.com/auto-complete/fuzzy-el),
+[smex](https://github.com/nonsequitur/smex) or maybe even [grizzl](https://github.com/d11wtq/grizzl)
+to work with `helm-fuzzier`. I currently use `helm-fuzzier` with `helm-flx`
+and am extremely happy with the results.
 
 To summarise, `helm-flx` and `helm-fuzzier` complement one another,
 neither strictly requires the other, neither is a substitute for the
