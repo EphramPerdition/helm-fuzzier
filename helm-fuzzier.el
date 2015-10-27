@@ -192,10 +192,10 @@ the word prefixes in a candidate.
 
 The regex generation variations is controlled by the MAX_GROUP-LENGTH argument:
 
-With MAX-GROUP-LENGTH=1 the pattern generated for \"abc\" will matche
+With MAX-GROUP-LENGTH=1 the pattern generated for \"abc\" will match
 \"a...-b...-c\"
 
-With MAX-GROUP-LENGTH=2 the pattern generated for \"abc\" will matche
+With MAX-GROUP-LENGTH=2 the pattern generated for \"abc\" will match
 \"a...-b...-c...\" or \"ab...-c...\" or \"a...-bc....\"
 
 etc'."
