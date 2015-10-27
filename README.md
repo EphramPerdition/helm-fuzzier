@@ -2,6 +2,8 @@
 
 This package provides more intuitive fuzzy matching behavior for [Helm](https://github.com/emacs-helm/helm).
 
+Now available on MELPA, install it with `package-install`.
+
 You should also consider installing the [helm-flx](https://github.com/PythonNut/helm-flx)
 package from MELPA, for even better results.
 
