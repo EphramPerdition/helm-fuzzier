@@ -65,7 +65,7 @@ See source code for more detailed information on the implementation.
 #### tl;dr:
 
 - Helm provides "fuzzy matching" out of the box.
-- But what many users actually want is "flex matching".
+- What many users actually want is "flex matching".
 - `helm-fuzzier` and `helm-flx` each improve Helm's matching in distinct ways.
 - Together, they finally provide the sort of "flex matching" you want, in Helm,
 for any source that has fuzzy matching enabled.
