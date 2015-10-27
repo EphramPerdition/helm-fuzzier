@@ -93,7 +93,7 @@ far back it goes.
 package in 2013 which finally provided a quicksilver-like *scoring* of matches,
 but until recently (Oct. 2015) `flx` only supported `ido`, not Helm.
 @PythonNut packaged a snippet from his `.emacs` as `helm-flx` to remedy
-and so the scoring part of Helm now works very well.
+this and so the scoring part of Helm now works very well.
 
 Improving Helm's *matching*, the other half of getting good results, is
 done by this package: `helm-fuzzier`. Although good scoring ensures
