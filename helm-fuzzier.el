@@ -251,6 +251,25 @@ about SEPERATORS and MAX-GROUP-LENGTH"
   (user-error "I should not have been called"))
 
 (defun helm-fuzzier--get-preferred-matches (cands _ match-part-fn limit source)
+  "Perform a scan over all candidates looking for \"Preferred Matches\".
+
+Two caches are used.  'helm-fuzzier-preferred-matches-cache' is used
+to cache the result for a query so the next query which has the same
+prefix only scans the previous results instead of all candidates.
+With the default settings it is not used because it can lead
+to missed matches.
+
+'helm-fuzzier-preferred-candidates-cache' is used to cache a list of
+all candidates when a new query is entered. This is exclusively to
+support 'source-in-buffer' Helm sources, which perform the optimization
+described in the previous paragraph, before we even get to see the
+candidates. Because preferred matching relies cruically on examining
+all possible candidates, we have to cut through that optimization
+or we won't ever see the matches we're trying to boost.
+
+CANDS MATCH-PART-FN LIMIT SOURCE are the same arguments as found
+in 'helm-match-from-candidates' ."
+
   ;; when a new query begins we need to reset the caches.
   (when (helm-fuzzier--new-nonempty-query-p source helm-pattern)
     (clrhash helm-fuzzier-preferred-matches-cache)
