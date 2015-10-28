@@ -135,6 +135,16 @@ in Emacs symbols (i.e \"foo/bar-the-baz\") and in filenames
 :group 'helm-fuzzier
 :type  'string)
 
+(defcustom helm-fuzzier-max-candidates-to-scan 75000
+  "Hard limit on number of candidates to test for preferred match.
+
+Generally, we want to examine all possible candidates, and this should be
+fast enough. It is prudent none the less to place a hard upper limit on the
+number of candidates we scan"
+  :group 'helm-fuzzier
+  :type  'integer)
+
+
 ;;; internal variables
 (defvar helm-fuzzier-preferred-matches-cache (make-hash-table :test 'equal :size 8192)
   "Caches the preferred matches within a single helm invocation.")
@@ -245,7 +255,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
            #'buffer-substring-no-properties)
        (or (assoc-default 'search source)
            '(helm-candidates-in-buffer-search-default-fn))
-       50000 ;; hard limit on number of candidates scanned
+       helm-fuzzier-max-candidates-to-scan
        (helm-attr 'match-part)
        source)
     (helm-get-candidates source)))
