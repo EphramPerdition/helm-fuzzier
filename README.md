@@ -1,3 +1,6 @@
+
+[Demo Video](https://www.youtube.com/watch?v=8Ceeew4Hdz8)
+
 ### Description
 
 This package provides more intuitive fuzzy matching behavior for [Helm](https://github.com/emacs-helm/helm).
