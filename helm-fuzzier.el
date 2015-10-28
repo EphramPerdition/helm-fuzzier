@@ -245,6 +245,12 @@ about SEPERATORS and MAX-GROUP-LENGTH"
               query))))
 
 (defun helm-fuzzier--get-all-source-candidates-no-really-NO-REALLY (source query)
+  "Get all candidates for SOURCE. really. no, REALLY.
+
+'get-cached-candidates' won't work, even if we clrhash first.
+Actually, we don't REALLY get all candidates, we do limit the list to
+all candidates which match query. We should be called at the start
+of a new query (prefix). This cuts down the scan list a bit."
   (if (eq (assoc-default 'candidates source) #'helm-candidates-in-buffer)
       (helm-candidates-in-buffer-1
        (helm-candidate-buffer)
