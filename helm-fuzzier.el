@@ -146,8 +146,6 @@ number of candidates we scan"
 
 
 ;;; internal variables
-(defvar helm-fuzzier-preferred-matches-cache (make-hash-table :test 'equal :size 8192)
-  "Caches the preferred matches within a single helm invocation.")
 (defvar helm-fuzzier-preferred-candidates-cache (make-hash-table :test 'equal :size 1024)
   "Caches the complete candidates list for locating preferred matches.")
 (defvar helm-fuzzier-old-helm-match-fn nil
@@ -266,12 +264,6 @@ about SEPERATORS and MAX-GROUP-LENGTH"
 (defun helm-fuzzier--get-preferred-matches (cands _ match-part-fn limit source)
   "Perform a scan over all candidates looking for \"Preferred Matches\".
 
-Two caches are used.  'helm-fuzzier-preferred-matches-cache' is used
-to cache the result for a query so the next query which has the same
-prefix only scans the previous results instead of all candidates.
-With the default settings it is not used because it can lead
-to missed matches.
-
 'helm-fuzzier-preferred-candidates-cache' is used to cache a list of
 all candidates when a new query is entered. This is exclusively to
 support 'source-in-buffer' Helm sources, which perform the optimization
@@ -285,48 +277,22 @@ in 'helm-match-from-candidates' ."
 
   ;; when a new query begins we need to reset the caches.
   (when (helm-fuzzier--new-nonempty-query-p source helm-pattern)
-    (clrhash helm-fuzzier-preferred-matches-cache)
     (puthash (assoc-default 'name source)
              (helm-fuzzier--get-all-source-candidates-no-really-NO-REALLY source helm-pattern)
              helm-fuzzier-preferred-candidates-cache)
     (puthash (concat (assoc-default 'name source) "-query") helm-pattern helm-fuzzier-preferred-candidates-cache))
 
   (let* ((source-name (assoc-default 'name source))
-         (prelim-matcher (helm--make-initials-matcher helm-pattern))
-         (cached-preferred (when (> (length helm-pattern) 1)
-                             (gethash (concat source-name (helm-fuzzier--drop-last-char helm-pattern))
-                                      helm-fuzzier-preferred-matches-cache)))
-         (all-candidates (or cached-preferred  ; matches from but-last prefix query
-                             (gethash source-name helm-fuzzier-preferred-candidates-cache) ; all candidates for the source
+         (matcher (helm--make-initials-matcher helm-pattern))
+         (all-candidates (or (gethash source-name helm-fuzzier-preferred-candidates-cache)
                              cands))
          (preferred-matches (when (and
                                    (> (length helm-pattern) 1)
                                    (< (length helm-pattern) 6)
                                    (assoc 'fuzzy-match source))
                               (helm-fuzzier-orig-helm-match-from-candidates all-candidates
-                                                                            (list prelim-matcher)
-                                                                            match-part-fn limit source)))
-         (preferred-count (length preferred-matches)))
-
-    ;; iff helm-fuzzier-preferred-max-group-length=1 and the number of
-    ;; preferred matches found is below LIMIT, we can be certain that:
-    ;;
-    ;; 1. We've found all possible matches.
-    ;; 2. Any future query having the current query as its prefix cannot match
-    ;;    any candidate which isn't in this group of matches.
-    ;; So, we cache the results and use that instead of  scanning all candidates
-    ;; if the next query extends the current one.
-    ;;
-    ;; This won't work with group-length > 1:
-    ;;
-    ;; For example, with query-length=2 the query results "ab" do not
-    ;; include "ab-c" Now, if the user extends the query to "abc", it
-    ;; *should* match "ab-c"
-
-    (when (and (< preferred-count limit)
-               (= helm-fuzzier-preferred-max-group-length 1)
-               (> (length helm-pattern) 1))
-      (puthash (concat source-name helm-pattern) preferred-matches helm-fuzzier-preferred-matches-cache))
+                                                                            (list matcher)
+                                                                            match-part-fn limit source))))
     preferred-matches))
 
 ;; This function copied from Helm's 'helm-match-from-candidate' and
