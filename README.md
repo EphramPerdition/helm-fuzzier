@@ -2,13 +2,20 @@
 ### Description
 
 This package provides more intuitive fuzzy matching behavior for
-[Helm](https://github.com/emacs-helm/helm). Check out the
-[Demo](https://www.youtube.com/watch?v=8Ceeew4Hdz8).
+[Helm](https://github.com/emacs-helm/helm).
 
 Now available on MELPA, install it with `package-install`.
 
-For even better results, you should also consider installing the
+`helm-fuzzier` only fixes half the trouble with Helm, the other half
+(showing the best results first and the nice highlighting seen in the
+demo below) is provided by the
 [helm-flx](https://github.com/PythonNut/helm-flx) package from MELPA.
+
+### Demo
+
+![Action Gif](https://cloud.githubusercontent.com/assets/15329740/10805173/7faaf286-7dd4-11e5-9fba-f453f2faa49e.gif)
+
+[This demo](https://www.youtube.com/watch?v=8Ceeew4Hdz8) is even better.
 
 ### Installation:
 
