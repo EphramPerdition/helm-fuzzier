@@ -244,25 +244,36 @@ about SEPERATORS and MAX-GROUP-LENGTH"
                   "\x00")
               query))))
 
+(defun helm-fuzzier-candidates-in-buffer-search-default-fn (pattern)
+  "Search PATTERN with `re-search-forward' with bound and noerror args.
+
+Preferred matching requires initial letter to match use that to reduce
+the number of candidates to check."
+  (let ((pat (format "^%s" (substring pattern 0 1))))
+    (condition-case _err
+        (re-search-forward pat nil t)
+      (invalid-regexp nil))))
+
 (defun helm-fuzzier--get-all-source-candidates-no-really-NO-REALLY (source query)
   "Get all candidates for SOURCE. really. no, REALLY.
 
 'get-cached-candidates' won't work, even if we clrhash first.
 Actually, we don't REALLY get all candidates, we do limit the list to
-all candidates which match query. We should be called at the start
-of a new query (prefix). This cuts down the scan list a bit."
-  (if (eq (assoc-default 'candidates source) #'helm-candidates-in-buffer)
-      (helm-candidates-in-buffer-1
-       (helm-candidate-buffer)
-       query
-       (or (assoc-default 'get-line source)
-           #'buffer-substring-no-properties)
-       (or (assoc-default 'search source)
-           '(helm-candidates-in-buffer-search-default-fn))
-       helm-fuzzier-max-candidates-to-scan
-       (helm-attr 'match-part)
-       source)
-    (helm-get-candidates source)))
+all candidates which match query. We should only be called at the start
+of a new query (prefix) and this can cut down the scan list dramatically."
+
+  (let* ((candidates  (if (eq (assoc-default 'candidates source) #'helm-candidates-in-buffer)
+                          (helm-candidates-in-buffer-1
+                           (helm-candidate-buffer)
+                           query
+                           (or (assoc-default 'get-line source)
+                               #'buffer-substring-no-properties)
+                           '(helm-fuzzier-candidates-in-buffer-search-default-fn)
+                           helm-fuzzier-max-candidates-to-scan
+                           (helm-attr 'match-part)
+                           source)
+                        (helm-get-candidates source))))
+    candidates))
 
 (defun helm-fuzzier--matchfn-stub (&rest _)
   (user-error "I should not have been called"))
@@ -286,7 +297,10 @@ in 'helm-match-from-candidates' ."
     (puthash (assoc-default 'name source)
              (helm-fuzzier--get-all-source-candidates-no-really-NO-REALLY source helm-pattern)
              helm-fuzzier-preferred-candidates-cache)
-    (puthash (concat (assoc-default 'name source) "-query") helm-pattern helm-fuzzier-preferred-candidates-cache))
+    (puthash (concat (assoc-default 'name source) "-query") helm-pattern helm-fuzzier-preferred-candidates-cache)
+    ;; (message "Count All Candidates: %d" (length (gethash (assoc-default 'name source)
+    ;;                                                      helm-fuzzier-preferred-candidates-cache)))
+    )
 
   (let* ((source-name (assoc-default 'name source))
          (matcher (helm--make-initials-matcher helm-pattern))
