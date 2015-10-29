@@ -6,9 +6,9 @@ This package provides more intuitive fuzzy matching behavior for
 
 Now available on MELPA, install it with `package-install`.
 
-`helm-fuzzier` only fixes half the trouble with Helm, the other half
-(showing the best results first and the nice highlighting seen in the
-demo below) is provided by the
+`helm-fuzzier` only fixes half the trouble with Helm (getting the best
+matches on the list), the other half (showing the best results first
+and the nice highlighting seen in the demo below) is provided by the
 [helm-flx](https://github.com/PythonNut/helm-flx) package from MELPA.
 
 ### Demo
