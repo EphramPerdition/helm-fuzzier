@@ -224,7 +224,7 @@ about SEPERATORS and MAX-GROUP-LENGTH"
 
 Preferred matching requires initial letter to match use that to reduce
 the number of candidates to check."
-  (let ((pat (format "^%s" (substring pattern 0 1))))
+  (let ((pat (format "^%c" (aref pattern 0))))
     (condition-case _err
         (re-search-forward pat nil t)
       (invalid-regexp nil))))
