@@ -365,7 +365,7 @@ the result of both concatenated into one list."
 
 ;;;###autoload
 (define-minor-mode helm-fuzzier-mode
-  "helm-flx minor mode"
+  "helm-fuzzier minor mode"
   :init-value nil
   :group 'helm-fuzzier
   :global t
