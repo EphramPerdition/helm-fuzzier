@@ -109,6 +109,18 @@ a value of 2 will match all. a value of 3 will match
   :group 'helm-fuzzier
   :type  'integer)
 
+(defcustom helm-fuzzier-max-query-len 5
+  "Upper limit on query length for preferred matching.
+
+Just as with 'helm-fuzzier-preferred-max-group-length', the number
+of clauses in the regex we generate for matching grows quickly
+with the length of the query. If the query we are given exceeds
+this limit, we truncate the query to this length before generating
+the regex."
+  :group 'helm-fuzzier
+  :type  'integer)
+
+
 (defcustom helm-fuzzier-word-boundaries "- /:|_"
   "List of characters that indicate a word boundary.
 
@@ -306,12 +318,16 @@ in 'helm-match-from-candidates' ."
     )
 
   (let* ((source-name (assoc-default 'name source))
-         (matcher (helm--make-initials-matcher helm-pattern))
+         (matcher (helm--make-initials-matcher (substring helm-pattern
+                                                          0
+                                                          ;; limit query len to control
+                                                          ;; regex complexity
+                                                          (min (length helm-pattern)
+                                                               helm-fuzzier-max-query-len))))
          (all-candidates (or (gethash source-name helm-fuzzier-preferred-candidates-cache)
                              cands))
          (preferred-matches (when (and
                                    (> (length helm-pattern) 1)
-                                   (< (length helm-pattern) 6)
                                    (assoc 'fuzzy-match source))
                               (helm-fuzzier-orig-helm-match-from-candidates all-candidates
                                                                             (list matcher)
