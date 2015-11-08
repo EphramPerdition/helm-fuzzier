@@ -142,31 +142,48 @@ which are not regex-safe should be quoted."
                      (cdr groups) "")
           "\\)"))
 
-(defun helm-fuzzier--explode-pattern-to-fuzzy-initials (query max-length)
-  "Takes a string QUERY and return a list \"exploded\" variations of it.
+(defun helm-fuzzier--partition-string (query max-length &optional level)
+  "Returns a list of all possible partitions of the QUERY string.
 
-The variations include every way to select one group of 1 to MAX-LENGTH
-letters in the string and keep the rests as single letters.
+Returns all possible partitions where no substring has length > MAX-LENGTH
 
-Example: (explode \"abc\" 2) =>
-         ((\"a\" \"b\" \"c\") (\"ab\" \"c\") (\"a\" \"bc\"))"
-  (let (results)
-    (cl-loop
-       for len from 1 to (min max-length (1- (length query)))
-       do (cl-loop for pos from 0 to (if ( = len 1)
-                                         0
-                                       (- (length query) len))
-             for result = (cl-loop
-                             for i = 0 then (+ i (if (= i pos)
-                                                     len
-                                                   1))
-                             until (>= i (length query))
-                             collect (substring query i
-                                                (+ i (if (= i pos)
-                                                         len
-                                                       1))))
-             do (push result results)))
-    results))
+Note: Recursive and may blow stack. Caller will normally invoke us with
+a short QUERY, so stack overflow shouldn't occur.
+
+Example:
+
+(helm-fuzzier--partition-string \"abcd\" 3)
+((\"a\" \"b\" \"c\" \"d\") (\"a\" \"b\" \"cd\") (\"a\" \"bc\" \"d\") (\"a\" \"bcd\") (\"ab\" \"c\" \"d\") (\"ab\" \"cd\") (\"abc\" \"d\"))"
+
+  (let ((qlen (length query)))
+    (if (= qlen 1)
+        (list (list query))
+      (cl-loop
+         for group-length from 1 to (min max-length
+                                         ;; Forbid first group from consuming entire string
+                                         ;; To enforce at least two groups.
+                                         (- qlen
+                                            (if level
+                                                0
+                                              1)))
+         append
+           (if (= group-length qlen)
+               (list (list query)) ;; base case
+             ;; Break off group from head of string, recurse with the remaining
+             ;; string to get a list of lists of string (groups)
+             ;; Prepend the local group to each list in the retval
+             (let* ((string-head (substring query 0 group-length))
+                    (string-tail (substring query
+                                            group-length
+                                            qlen))
+                    (partitions (helm-fuzzier--partition-string string-tail
+                                                                max-length
+                                                                (1+ (or level 0)))))
+               ;; Build the result list by prepending the current group
+               ;; to every one of the possible partitions of the remaining string
+               (mapcar (lambda (other-groups) (cons string-head other-groups))
+                       partitions)))))))
+
 
 (defun helm-fuzzier--mapconcat-initials-pattern (pattern seperators &optional max-group-length)
   "Transform string PATTERN into a regexp for fuzzy matching as initials.
@@ -186,7 +203,7 @@ With MAX-GROUP-LENGTH=2 the pattern generated for \"abc\" will match
 
 etc'."
   (mapconcat (lambda (ls) (helm-fuzzier--mapconcat-initials-pattern-1 ls seperators))
-             (helm-fuzzier--explode-pattern-to-fuzzy-initials
+             (helm-fuzzier--partition-string
               pattern
               max-group-length)
              "\\|"))
