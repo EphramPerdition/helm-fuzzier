@@ -115,8 +115,9 @@ a value of 2 will match all. a value of 3 will match
 Just as with 'helm-fuzzier-preferred-max-group-length', the number
 of clauses in the regex we generate for matching grows quickly
 with the length of the query. If the query we are given exceeds
-this limit, we truncate the query to this length before generating
-the regex."
+this limit, we recuse ourselves and let helm take over, hoping that
+that the query is long enough to reduce the number of candidates
+below limit, so the scoring phase will get to see all possible matches."
   :group 'helm-fuzzier
   :type  'integer)
 
@@ -292,7 +293,7 @@ of a new query (prefix) and this can cut down the scan list dramatically."
 (defun helm-fuzzier--matchfn-stub (&rest _)
   (user-error "I should not have been called"))
 
-(defun helm-fuzzier--get-preferred-matches (cands _ match-part-fn limit source)
+(defun helm-fuzzier--get-preferred-matches (cands matchfns match-part-fn limit source)
   "Perform a scan over all candidates looking for \"Preferred Matches\".
 
 'helm-fuzzier-preferred-candidates-cache' is used to cache a list of
@@ -330,8 +331,19 @@ in 'helm-match-from-candidates' ."
                                    (assoc 'fuzzy-match source))
                               (helm-fuzzier-orig-helm-match-from-candidates all-candidates
                                                                             (list matcher)
-                                                                            match-part-fn limit source))))
-    preferred-matches))
+                                                                            match-part-fn limit source)))
+         ;; when the query exceeds max-query-len, the matcher will truncate
+         ;; it to limit the complexity of the regex, so we may end up with
+         ;; false positive matches. Weed these out by passing them as
+         ;; candidates to helm's fuzzy matcher.
+         (result (if (<= (length helm-pattern)
+                         helm-fuzzier-max-query-len)
+                     preferred-matches
+                   (clrhash helm-match-hash)
+                   (helm-fuzzier-orig-helm-match-from-candidates preferred-matches
+                                                                 matchfns
+                                                                 match-part-fn limit source))))
+    result))
 
 ;; This function copied from Helm's 'helm-match-from-candidate' and
 ;; slightly modified.  We need to disable the clrhash to ensure
