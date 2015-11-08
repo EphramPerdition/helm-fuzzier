@@ -91,10 +91,21 @@
 (defcustom helm-fuzzier-preferred-max-group-length 4
   "Knob controlling regex generation for fuzzier matching.
 
-For a query of \"abc\":
-- Value of 1 will generate regex that match \"a.*-b.*-c.*\"
-- Value of 2 will generate regex that also match \"ab.*-c.*\" and \"a.*-bc.*\"
-- etc"
+Trade speed for accuracy.
+Larger values create increasingly expensive regexs.  Number of clauses
+grows very quickly as this value increases, so set this conservatively.
+
+A value of 1 will match:
+\"bbs\" -> \"(b)ulletin-(b)oard-(s)ystem\"
+but not:
+\"bubs\" -> \"(bu)lletin-(b)oard-(s)ystem\"
+and not:
+\"bubsy\" -> \"(bu)lletin-(b)oard-(sy)stem\"
+
+a value of 2 will match all. a value of 3 will match
+\"bulbs\" -> \"(bul)letin-(b)oard-(s)sstem\"
+
+... and so on"
   :group 'helm-fuzzier
   :type  'integer)
 
