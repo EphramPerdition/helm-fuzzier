@@ -194,7 +194,6 @@ Example:
                (list (list query)) ;; base case
              ;; Break off group from head of string, recurse with the remaining
              ;; string to get a list of lists of string (groups)
-             ;; Prepend the local group to each list in the retval
              (let* ((string-head (substring query 0 group-length))
                     (string-tail (substring query
                                             group-length
