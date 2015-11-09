@@ -339,6 +339,7 @@ in 'helm-match-from-candidates' ."
          (result (if (<= (length helm-pattern)
                          helm-fuzzier-max-query-len)
                      preferred-matches
+                   (clrhash helm-match-hash)
                    (helm-fuzzier-orig-helm-match-from-candidates preferred-matches
                                                                  (list (symbol-function helm-fuzzy-match-fn))
                                                                  match-part-fn limit source))))
