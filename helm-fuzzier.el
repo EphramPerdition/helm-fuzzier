@@ -231,7 +231,7 @@ etc'."
               max-group-length)
              "\\|"))
 
-(defun helm--make-initials-matcher (pattern &optional seperators max-group-length )
+(defun helm-fuzzier--make-initials-matcher (pattern &optional seperators max-group-length )
   "Constructs a matching function for PATTERN.
 
 See 'helm-fuzzier--mapconcat-initials-pattern' docstring for information
@@ -318,7 +318,7 @@ in 'helm-match-from-candidates' ."
     )
 
   (let* ((source-name (assoc-default 'name source))
-         (matcher (helm--make-initials-matcher (substring helm-pattern
+         (matcher (helm-fuzzier--make-initials-matcher (substring helm-pattern
                                                           0
                                                           ;; limit query len to control
                                                           ;; regex complexity
