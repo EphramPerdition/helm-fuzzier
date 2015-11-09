@@ -293,7 +293,7 @@ of a new query (prefix) and this can cut down the scan list dramatically."
 (defun helm-fuzzier--matchfn-stub (&rest _)
   (user-error "I should not have been called"))
 
-(defun helm-fuzzier--get-preferred-matches (cands matchfns match-part-fn limit source)
+(defun helm-fuzzier--get-preferred-matches (cands _ match-part-fn limit source)
   "Perform a scan over all candidates looking for \"Preferred Matches\".
 
 'helm-fuzzier-preferred-candidates-cache' is used to cache a list of
@@ -339,9 +339,8 @@ in 'helm-match-from-candidates' ."
          (result (if (<= (length helm-pattern)
                          helm-fuzzier-max-query-len)
                      preferred-matches
-                   (clrhash helm-match-hash)
                    (helm-fuzzier-orig-helm-match-from-candidates preferred-matches
-                                                                 matchfns
+                                                                 (list (symbol-function helm-fuzzy-match-fn))
                                                                  match-part-fn limit source))))
     result))
 
