@@ -319,11 +319,11 @@ in 'helm-match-from-candidates' ."
 
   (let* ((source-name (assoc-default 'name source))
          (matcher (helm-fuzzier--make-initials-matcher (substring helm-pattern
-                                                          0
-                                                          ;; limit query len to control
-                                                          ;; regex complexity
-                                                          (min (length helm-pattern)
-                                                               helm-fuzzier-max-query-len))))
+                                                                  0
+                                                                  ;; limit query len to control
+                                                                  ;; regex complexity
+                                                                  (min (length helm-pattern)
+                                                                       helm-fuzzier-max-query-len))))
          (all-candidates (or (gethash source-name helm-fuzzier-preferred-candidates-cache)
                              cands))
          (preferred-matches (when (and
