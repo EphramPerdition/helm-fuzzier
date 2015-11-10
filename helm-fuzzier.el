@@ -28,7 +28,12 @@
 ;;; Commentary:
 
 ;; This package provides more intuitive fuzzy matching behavior for Helm.
-;; For best results, use in conjunction with the 'helm-flx' package.
+;; Use in conjunction with the 'helm-flx' package for best results.
+;; `helm-fuzzier' improves Helm's "matching", meaning that it tries
+;; to ensure the best matches appear on the result list. 'helm-flx',
+;; on the other hand, provides on-the-fly highlighting and (dramatically)
+;; improves Helm's "scoring" so that the results are shown ordered from
+;; "best" to "worst" match.
 ;;
 ;; Usage:
 ;;
@@ -51,10 +56,9 @@
 ;;
 ;; Helm's support (As of Oct 2015) for fuzzy matching breaks down when
 ;; the number of matches exceeds its internal limit
-;; 'helm-candidate-number-limit'. Helm will only look until it finds
-;; the first LIMIT matches, no matter how good they are and then
-;; stop. The result is that the best matches are often not included in
-;; the results.
+;; 'helm-candidate-number-limit'. Helm will stop looking once it finds
+;; LIMIT matches, even if better matches exist among the remaining candidates.
+;; The result is that the best matches are often not included in the results.
 
 ;; Helm additionally separates *matching* from *scoring* into separate
 ;; phases.  the former simply collects LIMIT matches of whatever
