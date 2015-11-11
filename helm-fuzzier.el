@@ -250,11 +250,17 @@ etc'."
 
 See 'helm-fuzzier--mapconcat-initials-pattern' docstring for information
 about SEPERATORS and MAX-GROUP-LENGTH"
-  (let* ((initials-pat (helm-fuzzier--mapconcat-initials-pattern
-                        pattern
-                        (or seperators helm-fuzzier-word-boundaries)
-                        (or max-group-length
-                            helm-fuzzier-preferred-max-group-length)))
+  (let* ((initials-pat
+          (concat
+           ;; match prefix of single word match
+           (format "\\(^%s[^%s]*$\\)\\|" pattern (or seperators
+                                                     helm-fuzzier-word-boundaries))
+           ;; match abbreviations
+           (helm-fuzzier--mapconcat-initials-pattern
+            pattern
+            (or seperators helm-fuzzier-word-boundaries)
+            (or max-group-length
+                helm-fuzzier-preferred-max-group-length))))
          (matcher (lambda (candidate)
                     (string-match initials-pat candidate))))
     matcher))
