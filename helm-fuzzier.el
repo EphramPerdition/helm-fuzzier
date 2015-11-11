@@ -147,6 +147,16 @@ number of candidates we scan"
   :group 'helm-fuzzier
   :type  'integer)
 
+(defcustom helm-fuzzier-remaining-matches-quota 10
+  "Lower limit on number of matche slots left for Helm to fulfill.
+
+Set this to a (small, positive) value below 'helm-candidate-number-limit'.
+
+'helm-fuzzier' will then provide up to (- LIMIT quota) matches
+and leave the remaining slots to be filled by Helm's matching logic."
+
+  :group 'helm-fuzzier
+  :type  'integer)
 
 ;;; internal variables
 (defvar helm-fuzzier-preferred-candidates-cache (make-hash-table :test 'equal :size 1024)
@@ -393,7 +403,12 @@ the result of both concatenated into one list."
   (let* ((with-preferred (member #'helm-fuzzier--matchfn-stub matchfns ))
          (matchfns (cl-remove #'helm-fuzzier--matchfn-stub matchfns))
          (preferred-matches (when with-preferred
-                              (helm-fuzzier--get-preferred-matches cands matchfns match-part-fn limit source)))
+                              (helm-fuzzier--get-preferred-matches
+                               cands
+                               matchfns
+                               match-part-fn
+                               (max 0 (- limit helm-fuzzier-remaining-matches-quota))
+                               source)))
          (remaining-count (max 0 (- limit (length preferred-matches))))
          (matches (helm-fuzzier-orig-helm-match-from-candidates
                    cands
@@ -430,6 +445,9 @@ the result of both concatenated into one list."
   :global t
   (if helm-fuzzier-mode
       (progn
+        (when (>= helm-fuzzier-remaining-matches-quota
+                  helm-candidate-number-limit)
+          (warn "helm-fuzzier-mode: 'helm-fuzzier-remaining-matches-quota'  >= 'helm-candidate-number-limit', helm-fuzzier is effectively disabled."))
         (when (not helm-fuzzier-old-helm-match-fn)
           (setq helm-fuzzier-old-helm-match-fn (symbol-function #'helm-match-from-candidates)))
         (setf (symbol-function 'helm-match-from-candidates) #'helm-fuzzier--match-from-candidates)
