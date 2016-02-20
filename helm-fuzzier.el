@@ -163,6 +163,8 @@ and leave the remaining slots to be filled by Helm's matching logic."
   "Caches the complete candidates list for locating preferred matches.")
 (defvar helm-fuzzier-old-helm-match-fn nil
   "Ref to original helm match function.")
+(defvar helm-fuzzier-match-hash (make-hash-table :test 'equal)
+  "holds matches for dedupe during filtering")
 
 (defun helm-fuzzier--mapconcat-initials-pattern-1 (groups seperators)
   "Construct regexp from GROUPS to match them as separated initials of a string.
@@ -359,42 +361,51 @@ in 'helm-match-from-candidates' ."
          (result (if (<= (length helm-pattern)
                          helm-fuzzier-max-query-len)
                      preferred-matches
-                   (clrhash helm-match-hash)
+                   (clrhash helm-fuzzier-match-hash)
                    (helm-fuzzier-orig-helm-match-from-candidates preferred-matches
                                                                  (list (symbol-function helm-fuzzy-match-fn))
                                                                  match-part-fn limit source))))
     result))
 
-;; This function copied from Helm's 'helm-match-from-candidate' and
-;; slightly modified.  We need to disable the clrhash to ensure
-;; dedupe works across multiple calls to this function.
-;;
-;; clrhash is invoked by the caller 'helm-fuzzier--match-from-candidates' instead.
+;; This function copied from Helm commit b1ec2d1ab48f137e712.
+;; Modified to use helm-fuzzier-match-hash instead of creating a local hash table
+;; so that the dedupe of matches takes place with a hash table which has already
+;; been populated by the preferred matches we've found.
 (defun helm-fuzzier-orig-helm-match-from-candidates (cands matchfns match-part-fn limit source)
-  (let (matches)
-    (condition-case-unless-debug err
-        (let ((item-count 0)
-              (case-fold-search (helm-set-case-fold-search)))
-          ;; (clrhash helm-match-hash) ; DISABLED
-          (cl-dolist (match matchfns)
-            (when (< item-count limit)
-              (let (newmatches)
-                (cl-dolist (candidate cands)
-                  (unless (gethash candidate helm-match-hash)
-                    (let ((target (helm-candidate-get-display candidate)))
-                      (when (funcall match
-                                     (if match-part-fn
-                                         (funcall match-part-fn target) target))
-                        (helm--accumulate-candidates
-                         candidate newmatches
-                         helm-match-hash item-count limit source)))))
-                ;; filter-one-by-one may return nil candidates, so delq them if some.
-                (setq matches (nconc matches (nreverse (delq nil newmatches))))))))
-      (error (unless (eq (car err) 'invalid-regexp) ; Always ignore regexps errors.
-               (helm-log-error "helm-match-from-candidates in source `%s': %s %s"
-                               (assoc-default 'name source) (car err) (cdr err)))
-             (setq matches nil)))
-    matches))
+  (condition-case-unless-debug err
+      (cl-loop with hash = helm-fuzzier-match-hash
+               with allow-dups = (assq 'allow-dups source)
+               with case-fold-search = (helm-set-case-fold-search)
+               with count = 0
+               for iter from 1
+               for fn in matchfns
+               when (< count limit) nconc
+               (cl-loop for c in cands
+                        for dup = (gethash c hash)
+                        while (and (< count limit)
+                                   ;; When allowing dups check if DUP
+                                   ;; have been already found in previous loop
+                                   ;; by comparing its value with ITER.
+                                   (or (and allow-dups dup (= dup iter))
+                                       (null dup)))
+                        for target = (helm-candidate-get-display c)
+                        for part = (if match-part-fn
+                                       (funcall match-part-fn target)
+                                       target)
+                        when (funcall fn part) do
+                        (progn
+                          ;; Modify candidate before pushing it to hash.
+                          (helm--maybe-process-filter-one-by-one-candidate c source)
+                          ;; Give as value the iteration number of
+                          ;; inner loop to be able to check if
+                          ;; the duplicate have not been found in previous loop.
+                          (puthash c iter hash)
+                          (cl-incf count))
+                        and collect c))
+    (error (unless (eq (car err) 'invalid-regexp) ; Always ignore regexps errors.
+             (helm-log-error "helm-match-from-candidates in source `%s': %s %s"
+                             (assoc-default 'name source) (car err) (cdr err)))
+           nil)))
 
 
 (defun helm-fuzzier--match-from-candidates (cands matchfns match-part-fn limit source)
@@ -404,7 +415,7 @@ First perform the \"preferred matches\" pass and then call the default helm
 logic to fill the remaining quota with matches using its algo. Returns
 the result of both concatenated into one list."
 
-  (clrhash helm-match-hash) ; Clear hashtable used for deduping results across multiple matchfns
+  (clrhash helm-fuzzier-match-hash) ; Clear hashtable used for deduping results across multiple matchfns
 
   (let* ((with-preferred (member #'helm-fuzzier--matchfn-stub matchfns ))
          (matchfns (cl-remove #'helm-fuzzier--matchfn-stub matchfns))
