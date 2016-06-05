@@ -373,35 +373,36 @@ in 'helm-match-from-candidates' ."
 ;; been populated by the preferred matches we've found.
 (defun helm-fuzzier-orig-helm-match-from-candidates (cands matchfns match-part-fn limit source)
   (condition-case-unless-debug err
-      (cl-loop with hash = helm-fuzzier-match-hash
+      (delq nil
+            (cl-loop with hash = helm-fuzzier-match-hash
                with allow-dups = (assq 'allow-dups source)
                with case-fold-search = (helm-set-case-fold-search)
                with count = 0
                for iter from 1
                for fn in matchfns
                when (< count limit) nconc
-               (cl-loop for c in cands
-                        for dup = (gethash c hash)
-                        while (and (< count limit)
-                                   ;; When allowing dups check if DUP
-                                   ;; have been already found in previous loop
-                                   ;; by comparing its value with ITER.
-                                   (or (and allow-dups dup (= dup iter))
-                                       (null dup)))
-                        for target = (helm-candidate-get-display c)
-                        for part = (if match-part-fn
-                                       (funcall match-part-fn target)
-                                       target)
-                        when (funcall fn part) do
-                        (progn
-                          ;; Modify candidate before pushing it to hash.
-                          (helm--maybe-process-filter-one-by-one-candidate c source)
-                          ;; Give as value the iteration number of
-                          ;; inner loop to be able to check if
-                          ;; the duplicate have not been found in previous loop.
-                          (puthash c iter hash)
-                          (cl-incf count))
-                        and collect c))
+                 (cl-loop for c in cands
+                    for dup = (gethash c hash)
+                    while (and (< count limit)
+                               ;; When allowing dups check if DUP
+                               ;; have been already found in previous loop
+                               ;; by comparing its value with ITER.
+                               (or (and allow-dups dup (= dup iter))
+                                   (null dup)))
+                    for target = (helm-candidate-get-display c)
+                    for part = (if match-part-fn
+                                   (funcall match-part-fn target)
+                                 target)
+                    when (funcall fn part) do
+                      (progn
+                        ;; Modify candidate before pushing it to hash.
+                        (helm--maybe-process-filter-one-by-one-candidate c source)
+                        ;; Give as value the iteration number of
+                        ;; inner loop to be able to check if
+                        ;; the duplicate have not been found in previous loop.
+                        (puthash c iter hash)
+                        (cl-incf count))
+                    and collect c)))
     (error (unless (eq (car err) 'invalid-regexp) ; Always ignore regexps errors.
              (helm-log-error "helm-match-from-candidates in source `%s': %s %s"
                              (assoc-default 'name source) (car err) (cdr err)))
